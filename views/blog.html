@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Blog</title>
+</head>
+<body>
+    <header class="main-header">
+        <h1>Create your Blog</h1>
+    </header>
+    <main>
+        <form action="/get-blog" method="POST" >
+            <div class="form-control">
+                <label>Title:</label>
+                <input id="title" type="text" name="title" />
+                <label>Author:</label>
+                <input id="author" type="text" name="author" />
+                <label>Description:</label>
+                <input id="description" type="text" name="description" />
+                <button type="submit">Create blog</button>
+            </div>
+        </form>
+        <ul id="blogs"></ul>
+    </main>
+    <script>
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const response = await fetch('http://localhost:3000/get-blog');
+                const data = await response.json();
+                if (data && data.allBlogs) {
+                    data.allBlogs.forEach(blog => {
+                        showBlogs(blog);
+                    });
+                }
+            } catch (err) {
+                console.log(err);
+            }
+        });
+
+        function showBlogs(blog) {
+            const ul = document.getElementById('blogs');
+            const li = document.createElement('li');
+            const bttn = document.createElement('button');
+            bttn.id = 'expand';
+            bttn.textContent = '+';
+            li.id = blog.id;
+            li.textContent = blog.title;
+            li.appendChild(bttn);
+            ul.appendChild(li);
+            console.log(blog.id)
+            bttn.addEventListener('click', () => Clicked(blog.id));
+        }
+
+        async function Clicked(id) {
+            try {
+                const res = await fetch(`http://localhost:3000/get-blogDetails/${id}`, { method: 'POST' });
+                if (res.ok) {
+                    const response = await fetch(`http://localhost:3000/get-blogDetails/${id}`);
+                    const data = await response.json();
+                    if (data && data.Details) {
+                        showDetails(data.Details);
+                    }
+                }
+            } catch (err) {
+                console.log(err);
+            }
+        }
+
+        function showDetails(details) {
+            console.log('showDetails func', details[0].id);
+            const li = document.getElementById(details[0].id);
+            const author = document.createElement('p');
+            author.textContent = `Author: ${details[0].author}`;
+            const des = document.createElement('p');
+            des.textContent = details[0].description;
+            const label = document.createElement('label');
+            label.textContent = 'Write Comments';
+            const input = document.createElement('input');
+            input.type='text'
+            input.name = 'comment';
+            const buttn = document.createElement('button'); 
+            buttn.textContent = 'Add Comment';
+            li.appendChild(author);
+            li.appendChild(des);
+            li.appendChild(label);
+            li.appendChild(input);
+            li.appendChild(buttn);
+            buttn.addEventListener('click',()=>{Comments(details[0].id)})
+        }
+        
+        async function Comments(id){
+            try {
+                console.log('to post comments')
+                const res = await fetch(`http://localhost:3000/get-comments/${id}`, { method: 'POST' });
+                if (res.ok) {
+                    console.log('to get comments')
+                    const response = await fetch(`http://localhost:3000/get-comments/${id}`);
+                    const data = await response.json();
+                    if (data && data.allComments) {
+                        data.allComments.forEach(comment=>{
+                            showComments(comment,id)
+                        })
+                    }
+                }
+            } catch (err) {
+                console.log(err);
+            }
+        }
+
+        function showComments(comment,id){
+            const li=document.getElementById(id)
+            const li2=document.createElement('li')
+            li2.id= comment.id
+            li2.textContent= comment.comments
+            const del= document.createElement('button')
+            del.textContent='Delete'
+            li2.appendChild(del)
+            li.appendChild(li2)
+        }
+    </script>
+</body>
+</html>
