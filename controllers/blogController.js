@@ -43,27 +43,42 @@ exports.getBlogDetails= async (req,res,next)=>{
     res.status(201).json({Details: Details})
 }
 
-exports.postComments= async(req,res,next)=>{
-    try{
-        const comments= req.body.comment
-        const Id= req.params.blogId
-        console.log(req)
-        await Comments.create({
+exports.postComments = async (req, res, next) => {
+    try {
+        const comments = req.body.comment;
+        const Id = req.params.blogId;
+        const newComment = await Comments.create({
             comments: comments,
             BlogId: Id
-        })
-        res.redirect('/')
+        });
+        res.status(201).json({ newComment: newComment });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+};
+
+
+exports.getComments = async (req, res, next) => {
+    try {
+        const Id = req.params.blogId;
+        const comments = await Comments.findAll({ where: { BlogId: Id } });
+        res.status(200).json({ allComments: comments }); 
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+};
+
+exports.deleteComments= async(req,res,next)=>{
+    try{
+        const id=req.params.commentId;
+        await Comments.destroy({where: {id: id}})
+        const comment= await Comments.findAll()
+        res.status(200).json({allComments: comment})
     }catch(err){
         console.log(err)
+        res.status(500).json({error: 'Internal Server Error'})
     }
 }
 
-exports.getComments= async(req,res,next)=>{
-    try{
-        const Id= req.params.blogId
-        const comments= await Comments.findAll({where: {BlogId: Id}})
-        res.json(201).json({allComments: comments}) 
-    }catch(err){
-        console.log(err)
-    }
-}

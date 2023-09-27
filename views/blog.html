@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create Blog</title>
+    <link rel="stylesheet" href="/blog.css">
 </head>
 <body>
     <header class="main-header">
@@ -24,6 +25,7 @@
         <ul id="blogs"></ul>
     </main>
     <script>
+        
         window.addEventListener('DOMContentLoaded', async () => {
             try {
                 const response = await fetch('http://localhost:3000/get-blog');
@@ -61,11 +63,21 @@
                     if (data && data.Details) {
                         showDetails(data.Details);
                     }
+                    const commentsResponse = await fetch(`http://localhost:3000/get-comments/${id}`);
+                    const commentsData = await commentsResponse.json();
+                    if (commentsData && commentsData.allComments) {
+                        commentsData.allComments.forEach(comment => {
+                            showComments(comment, id);
+                        });
+                    }
                 }
             } catch (err) {
-                console.log(err);
+            console.log(err);
             }
         }
+
+
+      
 
         function showDetails(details) {
             console.log('showDetails func', details[0].id);
@@ -77,6 +89,7 @@
             const label = document.createElement('label');
             label.textContent = 'Write Comments';
             const input = document.createElement('input');
+            input.id=`input${details[0].id}`
             input.type='text'
             input.name = 'comment';
             const buttn = document.createElement('button'); 
@@ -86,38 +99,65 @@
             li.appendChild(label);
             li.appendChild(input);
             li.appendChild(buttn);
-            buttn.addEventListener('click',()=>{Comments(details[0].id)})
+            buttn.addEventListener('click',()=>{Comments(details[0].id,input.value)})
         }
         
-        async function Comments(id){
+        async function Comments(id, value) {
             try {
-                console.log('to post comments')
-                const res = await fetch(`http://localhost:3000/get-comments/${id}`, { method: 'POST' });
-                if (res.ok) {
-                    console.log('to get comments')
-                    const response = await fetch(`http://localhost:3000/get-comments/${id}`);
-                    const data = await response.json();
-                    if (data && data.allComments) {
-                        data.allComments.forEach(comment=>{
-                            showComments(comment,id)
-                        })
+                    const res = await fetch(`http://localhost:3000/get-comments/${id}`, { 
+                        method: 'POST',
+                        body: JSON.stringify({'comment': value}),
+                        headers: {
+                            'Content-Type': 'application/json' 
+                        }
+                    });
+                    if (res.ok) {
+                        const input= document.getElementById(`input${id}`)
+                        input.value=''
+                        const data = await res.json();
+                        if (data && data.newComment) {
+                
+                            showComments(data.newComment, id);
+                        } 
                     }
-                }
-            } catch (err) {
-                console.log(err);
+                } catch (err) {
+                    console.log(err);
             }
         }
 
-        function showComments(comment,id){
-            const li=document.getElementById(id)
-            const li2=document.createElement('li')
-            li2.id= comment.id
-            li2.textContent= comment.comments
-            const del= document.createElement('button')
-            del.textContent='Delete'
-            li2.appendChild(del)
-            li.appendChild(li2)
+
+        function showComments(comment, id) {
+            console.log('show Comments');
+            const li = document.getElementById(id);
+            const ul = document.createElement('ul'); 
+            const li2 = document.createElement('li');
+            li2.id = comment.id;
+            li2.textContent = comment.comments;
+            const del = document.createElement('button');
+            del.textContent = 'Delete';
+            li2.appendChild(del);
+            ul.appendChild(li2); 
+            li.appendChild(ul);
+            del.addEventListener('click', () => { deleteComments(comment.id) });
         }
+
+        async function deleteComments(id) {
+        try{
+            const ul = document.getElementById('blogs');
+            console.log('clicked')
+            const res = await fetch(`http://localhost:3000/delete-comment/${id}`, { method: 'DELETE' })
+            const data= await res.json()
+            if (data.success) {
+                setTimeout(() => {
+                const li = document.getElementById(id);
+                ul.removeChild(li);
+            }, 0);
+            }
+        }catch(err){
+            console.log(err)
+        }
+    }
+
     </script>
 </body>
 </html>

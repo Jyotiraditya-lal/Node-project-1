@@ -10,5 +10,6 @@ router.post('/get-blogDetails/:blogId', blog.postBlogDetails)
 router.get('/get-blogDetails/:blogId',blog.getBlogDetails)
 router.post('/get-comments/:blogId',blog.postComments)
 router.get('/get-comments/:blogId',blog.getComments)
+router.delete('/delete-comment/:commentId',blog.deleteComments)
 
 module.exports= router
